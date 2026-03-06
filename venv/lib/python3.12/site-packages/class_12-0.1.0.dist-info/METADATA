@@ -1,0 +1,19 @@
+Metadata-Version: 2.4
+Name: class-12
+Version: 0.1.0
+Summary: Add your description here
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi>=0.124.0
+Requires-Dist: langchain>=1.1.2
+Requires-Dist: langchain-community>=0.3.0
+Requires-Dist: langchain-openai>=1.1.0
+Requires-Dist: langchain-pinecone>=0.2.13
+Requires-Dist: langchain-text-splitters>=1.0.0
+Requires-Dist: langgraph>=1.0.4
+Requires-Dist: pinecone>=3.0.0
+Requires-Dist: pydantic-settings>=2.0.0
+Requires-Dist: pypdf>=6.4.1
+Requires-Dist: python-dotenv>=1.2.1
+Requires-Dist: python-multipart>=0.0.20
+Requires-Dist: uvicorn>=0.38.0

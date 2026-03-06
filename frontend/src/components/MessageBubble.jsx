@@ -1,0 +1,42 @@
+function formatTime(date) {
+    return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+export default function MessageBubble({ message }) {
+    const { role, text, citations, error, time } = message;
+    const isBot = role === 'bot';
+
+    return (
+        <div className={`message-row ${role}`}>
+            {isBot && (
+                <div className="avatar">📚</div>
+            )}
+            <div className="message-content">
+                {isBot && (
+                    <div className="bot-label">Bio AI Assistant ✦</div>
+                )}
+                <div className={`bubble ${role} ${error ? 'error-bubble' : ''}`}>
+                    {text.split('\n').map((line, i) => (
+                        <span key={i}>
+                            {line}
+                            {i < text.split('\n').length - 1 && <br />}
+                        </span>
+                    ))}
+                </div>
+
+                {/* Citations */}
+                {citations && Object.keys(citations).length > 0 && (
+                    <div className="citations">
+                        {Object.entries(citations).map(([id, meta]) => (
+                            <span key={id} className="citation-tag" title={`Page ${meta.page} — ${meta.source}`}>
+                                [{id}] p.{meta.page}
+                            </span>
+                        ))}
+                    </div>
+                )}
+
+                <div className="message-time">{formatTime(time)}</div>
+            </div>
+        </div>
+    );
+}
