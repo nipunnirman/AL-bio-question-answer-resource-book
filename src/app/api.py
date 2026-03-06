@@ -1,4 +1,6 @@
 from pathlib import Path
+import logging
+import traceback
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile, status
 from fastapi.responses import JSONResponse
@@ -105,7 +107,15 @@ async def index_pdf(file: UploadFile = File(...)) -> dict:
     file_path.write_bytes(contents)
 
     # Index the saved PDF
-    chunks_indexed = index_pdf_file(file_path)
+    try:
+        chunks_indexed = index_pdf_file(file_path)
+    except Exception as e:
+        logging.error(f"Failed to index {file.filename}: {e}")
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to index PDF: {str(e)}",
+        )
 
     return {
         "filename": file.filename,
