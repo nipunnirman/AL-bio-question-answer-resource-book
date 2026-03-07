@@ -27,6 +27,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+async def root():
+    return {
+        "message": "A/L Biology RAG System Backend is running. Access API docs at /docs or /redoc"
+    }
+
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok"}
