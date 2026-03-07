@@ -5,7 +5,7 @@ import BottomBar from './components/BottomBar';
 import Particles from './components/Particles';
 import './index.css';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = 'https://al-bio-question-answer-resource-boo-zeta.vercel.app';
 
 const WELCOME_MESSAGE = {
   id: 'welcome',
