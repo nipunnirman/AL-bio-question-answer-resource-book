@@ -1,3 +1,6 @@
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
 function formatTime(date) {
     return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
@@ -16,12 +19,26 @@ export default function MessageBubble({ message }) {
                     <div className="bot-label">Bio AI Assistant ✦</div>
                 )}
                 <div className={`bubble ${role} ${error ? 'error-bubble' : ''}`}>
-                    {text.split('\n').map((line, i) => (
-                        <span key={i}>
-                            {line}
-                            {i < text.split('\n').length - 1 && <br />}
-                        </span>
-                    ))}
+                    {isBot ? (
+                        <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                                /* open links in new tab */
+                                a: ({ node, ...props }) => (
+                                    <a {...props} target="_blank" rel="noopener noreferrer" />
+                                ),
+                            }}
+                        >
+                            {text}
+                        </ReactMarkdown>
+                    ) : (
+                        text.split('\n').map((line, i) => (
+                            <span key={i}>
+                                {line}
+                                {i < text.split('\n').length - 1 && <br />}
+                            </span>
+                        ))
+                    )}
                 </div>
 
                 {/* Citations */}

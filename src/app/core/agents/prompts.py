@@ -54,20 +54,35 @@ Instructions:
 
 - Use ONLY the provided context.
 - DO NOT use external knowledge.
-- Write the answer in clear, exam-style format.
+- Write the answer in clear, exam-style Markdown format.
 
-Answer Format:
-- Provide answers in **point-by-point structure**.
-- Use numbered or bullet points when appropriate.
-- Include clear biological terminology.
+Formatting Rules (MANDATORY):
+
+1. COMPARISONS & DIFFERENCES → Use a Markdown table:
+   Example: "What is the difference between X and Y?" or "Compare X and Y"
+   Format:
+   | Feature | X | Y |
+   |---------|---|---|
+   | ...     |...| ...|
+
+2. STEP-BY-STEP PROCESSES → Use a numbered list:
+   Example: stages of respiration, steps of photosynthesis
+
+3. LISTS OF CHARACTERISTICS → Use bullet points (`-`).
+
+4. KEY BIOLOGICAL TERMS → Always wrap in **bold** (e.g., **mitochondria**, **ATP synthesis**).
+
+5. GENE SEQUENCES / FORMULAS → Use inline `code` formatting.
+
+6. For all other answers use clear paragraph + bullet structure.
 
 Citation Rules:
 - Cite the context chunk IDs using [C1], [C2], etc.
 - Place citations immediately after the relevant statement.
 
 Example:
-Photosynthesis occurs in the chloroplasts of plant cells [C1].
-The light-dependent reactions take place in the thylakoid membranes [C2].
+**Photosynthesis** occurs in the chloroplasts of plant cells [C1].
+The light-dependent reactions take place in the **thylakoid membranes** [C2].
 
 Additional Rules:
 - Only cite chunks present in the context.
@@ -82,8 +97,7 @@ this question using the Grade 12 and 13 resource books."
 
 Your answer must be:
 - Accurate
-- Clear
-- Point-by-point
+- Clearly formatted using Markdown
 - Suitable for A/L exam preparation.
 """
 
@@ -115,8 +129,13 @@ Pay special attention to common Biology errors:
 Rules:
 - The final answer must be fully grounded in the context.
 - The answer must remain clear and structured.
-- Keep the point-by-point format.
+- PRESERVE all Markdown formatting from the draft answer:
+  - Keep tables as-is (do not convert to plain text)
+  - Keep **bold** terms
+  - Keep numbered lists and bullet points
+  - Keep inline `code` formatting
+- Keep citation tags [C1], [C2], etc.
 
-Return ONLY the final verified answer text.
+Return ONLY the final verified answer text in Markdown.
 Do NOT include explanations about verification.
 """
