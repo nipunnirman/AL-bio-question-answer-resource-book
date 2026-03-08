@@ -1,5 +1,13 @@
 {
+    "version": 2,
     "builds": [
+        {
+            "src": "frontend/package.json",
+            "use": "@vercel/static-build",
+            "config": {
+                "distDir": "dist"
+            }
+        },
         {
             "src": "api/index.py",
             "use": "@vercel/python"
@@ -7,8 +15,32 @@
     ],
     "routes": [
         {
-            "src": "/(.*)",
+            "src": "/qa",
             "dest": "api/index.py"
+        },
+        {
+            "src": "/api/(.*)",
+            "dest": "api/index.py"
+        },
+        {
+            "src": "/docs",
+            "dest": "api/index.py"
+        },
+        {
+            "src": "/redoc",
+            "dest": "api/index.py"
+        },
+        {
+            "src": "/openapi.json",
+            "dest": "api/index.py"
+        },
+        {
+            "src": "/index-pdf",
+            "dest": "api/index.py"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/index.html"
         }
     ]
 }
