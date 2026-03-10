@@ -12,7 +12,7 @@ const API_BASE = '';
 const WELCOME_MESSAGE = {
   id: 'welcome',
   role: 'bot',
-  text: '👋 Hey there! I\'m your AI Biology Assistant!\n\nI\'m here to make biology fun and easy to understand! Ask me anything about cells, DNA, ecosystems, evolution, or any other biology topic. Let\'s explore the amazing world of life together! 🌿🧬',
+  text: '## Welcome to A/L BioBot 🧬\n\nI\'m your intelligent biology companion, powered by a curated knowledge base built for A/L Biology.\n\nAsk me anything about **cells**, **DNA & genetics**, **photosynthesis**, **ecosystems**, **evolution**, and much more. Let\'s explore the science of life together.',
   time: new Date(),
 };
 
@@ -23,7 +23,6 @@ function MainApp() {
   const [loading, setLoading] = useState(false);
   const chatEndRef = useRef(null);
 
-  /* Auto-scroll on new message */
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
@@ -33,7 +32,6 @@ function MainApp() {
       const question = (text ?? input).trim();
       if (!question || loading) return;
 
-      /* Add user bubble */
       const userMsg = { id: Date.now(), role: 'user', text: question, time: new Date() };
       setMessages((prev) => [...prev, userMsg]);
       setInput('');
@@ -42,33 +40,22 @@ function MainApp() {
       try {
         const res = await fetch(`${API_BASE}/qa`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ question }),
         });
-
-        if (!res.ok) {
-          throw new Error(`Server responded with ${res.status}`);
-        }
-
+        if (!res.ok) throw new Error(`Server responded with ${res.status}`);
         const data = await res.json();
         const botMsg = {
-          id: Date.now() + 1,
-          role: 'bot',
+          id: Date.now() + 1, role: 'bot',
           text: data.answer || 'I could not find an answer for that.',
-          citations: data.citations,
-          time: new Date(),
+          citations: data.citations, time: new Date(),
         };
         setMessages((prev) => [...prev, botMsg]);
       } catch (err) {
         const errMsg = {
-          id: Date.now() + 2,
-          role: 'bot',
-          text: '❌ Oops! Something went wrong. Please make sure the backend server is running and try again.',
-          error: true,
-          time: new Date(),
+          id: Date.now() + 2, role: 'bot',
+          text: '**Connection Error**\n\nCould not reach the backend server. Please ensure it is running and try again.',
+          error: true, time: new Date(),
         };
         setMessages((prev) => [...prev, errMsg]);
       } finally {
@@ -78,25 +65,27 @@ function MainApp() {
     [input, loading, token],
   );
 
-  const handleQuickQuestion = (q) => sendMessage(q);
-
-  if (!token) {
-    return <AuthPage />;
-  }
+  if (!token) return <AuthPage />;
 
   return (
-    <div className="app">
-      <Header />
-      <Particles />
-      <ChatArea messages={messages} loading={loading} chatEndRef={chatEndRef} />
-      <BottomBar
-        input={input}
-        setInput={setInput}
-        onSend={() => sendMessage()}
-        onQuickQuestion={handleQuickQuestion}
-        disabled={loading}
-      />
-    </div>
+    <>
+      <div className="bg-scene">
+        <div className="bg-orb bg-orb-1" />
+        <div className="bg-orb bg-orb-2" />
+        <div className="bg-orb bg-orb-3" />
+        <div className="bg-grid" />
+      </div>
+      <div className="app">
+        <Header />
+        <Particles />
+        <ChatArea messages={messages} loading={loading} chatEndRef={chatEndRef} />
+        <BottomBar
+          input={input} setInput={setInput}
+          onSend={() => sendMessage()} onQuickQuestion={sendMessage}
+          disabled={loading}
+        />
+      </div>
+    </>
   );
 }
 
