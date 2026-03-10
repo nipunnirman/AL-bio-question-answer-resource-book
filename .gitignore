@@ -1,0 +1,35 @@
+# Environments
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# React/Node
+node_modules/
+dist/
+.npm/
+.yarn/
+
+# OS Files
+.DS_Store
+Thumbs.db
