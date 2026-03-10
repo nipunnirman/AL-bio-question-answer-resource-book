@@ -3,6 +3,8 @@ import Header from './components/Header';
 import ChatArea from './components/ChatArea';
 import BottomBar from './components/BottomBar';
 import Particles from './components/Particles';
+import AuthPage from './components/AuthPage';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import './index.css';
 
 const API_BASE = '';
@@ -14,7 +16,8 @@ const WELCOME_MESSAGE = {
   time: new Date(),
 };
 
-export default function App() {
+function MainApp() {
+  const { token } = useAuth();
   const [messages, setMessages] = useState([WELCOME_MESSAGE]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -39,7 +42,10 @@ export default function App() {
       try {
         const res = await fetch(`${API_BASE}/qa`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify({ question }),
         });
 
@@ -69,10 +75,14 @@ export default function App() {
         setLoading(false);
       }
     },
-    [input, loading],
+    [input, loading, token],
   );
 
   const handleQuickQuestion = (q) => sendMessage(q);
+
+  if (!token) {
+    return <AuthPage />;
+  }
 
   return (
     <div className="app">
@@ -87,5 +97,13 @@ export default function App() {
         disabled={loading}
       />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
   );
 }
