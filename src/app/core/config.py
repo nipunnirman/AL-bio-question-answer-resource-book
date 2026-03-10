@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     # Retrieval Configuration
     retrieval_k: int = 4
 
+    # Auth & MongoDB Configuration
+    mongodb_url: str = "mongodb://localhost:27017"
+    secret_key: str
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
