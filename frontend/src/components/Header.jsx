@@ -5,7 +5,7 @@ export default function Header() {
     return (
         <header className="header">
             <div className="header-icon">
-                <img src="/logo.png" alt="BioBot Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '10px' }} />
+                <img src={`${import.meta.env.BASE_URL}logo.png`} alt="BioBot Logo" style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '10px' }} />
             </div>
             <div className="header-text">
                 <div className="header-title">AL Bio-QA</div>

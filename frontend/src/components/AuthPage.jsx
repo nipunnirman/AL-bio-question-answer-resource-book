@@ -34,7 +34,7 @@ export default function AuthPage() {
                 <Particles />
                 <div className="auth-card">
                     <div className="auth-logo">
-                        <img src="/logo.png" alt="BioBot Logo" style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
+                        <img src={`${import.meta.env.BASE_URL}logo.png`} alt="BioBot Logo" style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
                     </div>
                     <h1 className="auth-title">AL Bio-QA</h1>
                     <p className="auth-subtitle">Biology Question-Answering RAG System</p>
