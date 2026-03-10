@@ -7,13 +7,9 @@ import AuthPage from './components/AuthPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import './index.css';
 
-const API_BASE = '';
-
 const WELCOME_MESSAGE = {
-  id: 'welcome',
-  role: 'bot',
-  text: '## Welcome to A/L BioBot 🧬\n\nI\'m your intelligent biology companion, powered by a curated knowledge base built for A/L Biology.\n\nAsk me anything about **cells**, **DNA & genetics**, **photosynthesis**, **ecosystems**, **evolution**, and much more. Let\'s explore the science of life together.',
-  time: new Date(),
+  id: 'welcome', role: 'bot', time: new Date(),
+  text: `## Hello! I'm your A/L Biology Assistant 🌿\n\nI'm powered by a curated biology knowledge base. Ask me anything about:\n\n- **Cell biology** — structure, organelles, processes\n- **Genetics & DNA** — replication, transcription, inheritance\n- **Ecology** — ecosystems, food chains, biodiversity\n- **Evolution** — natural selection, adaptation\n- **Physiology** — how organisms work from within\n\nWhat would you like to explore today?`,
 };
 
 function MainApp() {
@@ -27,72 +23,54 @@ function MainApp() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  const sendMessage = useCallback(
-    async (text) => {
-      const question = (text ?? input).trim();
-      if (!question || loading) return;
-
-      const userMsg = { id: Date.now(), role: 'user', text: question, time: new Date() };
-      setMessages((prev) => [...prev, userMsg]);
-      setInput('');
-      setLoading(true);
-
-      try {
-        const res = await fetch(`${API_BASE}/qa`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ question }),
-        });
-        if (!res.ok) throw new Error(`Server responded with ${res.status}`);
-        const data = await res.json();
-        const botMsg = {
-          id: Date.now() + 1, role: 'bot',
-          text: data.answer || 'I could not find an answer for that.',
-          citations: data.citations, time: new Date(),
-        };
-        setMessages((prev) => [...prev, botMsg]);
-      } catch (err) {
-        const errMsg = {
-          id: Date.now() + 2, role: 'bot',
-          text: '**Connection Error**\n\nCould not reach the backend server. Please ensure it is running and try again.',
-          error: true, time: new Date(),
-        };
-        setMessages((prev) => [...prev, errMsg]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [input, loading, token],
-  );
+  const sendMessage = useCallback(async (text) => {
+    const question = (text ?? input).trim();
+    if (!question || loading) return;
+    setMessages(prev => [...prev, { id: Date.now(), role: 'user', text: question, time: new Date() }]);
+    setInput('');
+    setLoading(true);
+    try {
+      const res = await fetch('/qa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ question }),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      const data = await res.json();
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1, role: 'bot', time: new Date(),
+        text: data.answer || 'I could not find an answer for that.',
+        citations: data.citations,
+      }]);
+    } catch {
+      setMessages(prev => [...prev, {
+        id: Date.now() + 2, role: 'bot', error: true, time: new Date(),
+        text: '**Connection error.** Make sure the backend server is running and try again.',
+      }]);
+    } finally {
+      setLoading(false);
+    }
+  }, [input, loading, token]);
 
   if (!token) return <AuthPage />;
 
   return (
     <>
       <div className="bg-scene">
-        <div className="bg-orb bg-orb-1" />
-        <div className="bg-orb bg-orb-2" />
-        <div className="bg-orb bg-orb-3" />
-        <div className="bg-grid" />
+        <div className="bg-blob bg-blob-1" />
+        <div className="bg-blob bg-blob-2" />
+        <div className="bg-blob bg-blob-3" />
       </div>
       <div className="app">
         <Header />
         <Particles />
         <ChatArea messages={messages} loading={loading} chatEndRef={chatEndRef} />
-        <BottomBar
-          input={input} setInput={setInput}
-          onSend={() => sendMessage()} onQuickQuestion={sendMessage}
-          disabled={loading}
-        />
+        <BottomBar input={input} setInput={setInput} onSend={() => sendMessage()} onQuickQuestion={sendMessage} disabled={loading} />
       </div>
     </>
   );
 }
 
 export default function App() {
-  return (
-    <AuthProvider>
-      <MainApp />
-    </AuthProvider>
-  );
+  return <AuthProvider><MainApp /></AuthProvider>;
 }
