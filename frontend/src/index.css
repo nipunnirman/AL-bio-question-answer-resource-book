@@ -9,33 +9,33 @@
 }
 
 :root {
-  /* Primary palette — pink/magenta from the Figma */
-  --primary-dark: #6b1245;
-  --primary: #c2185b;
-  --primary-light: #e91e78;
-  --primary-lighter: #f06292;
-  --accent: #ff4081;
+  /* Primary palette — green */
+  --primary-dark: #1b5e20;
+  --primary: #2e7d32;
+  --primary-light: #4caf50;
+  --primary-lighter: #81c784;
+  --accent: #69f0ae;
 
   /* Backgrounds */
-  --bg-header: linear-gradient(135deg, #7b1450 0%, #4a0e30 100%);
-  --bg-body: #fce4ec;
+  --bg-header: linear-gradient(135deg, #1b5e20 0%, #0d3b11 100%);
+  --bg-body: #e8f5e9;
   --bg-bubble-bot: #ffffff;
-  --bg-bubble-user: linear-gradient(135deg, #e91e78 0%, #c2185b 100%);
+  --bg-bubble-user: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
   --bg-input: #ffffff;
 
   /* Text */
   --text-primary: #2d2d2d;
   --text-secondary: #666;
   --text-on-primary: #ffffff;
-  --text-bot-name: #c2185b;
+  --text-bot-name: #2e7d32;
 
   /* Particles */
-  --particle-color: rgba(194, 24, 91, 0.18);
+  --particle-color: rgba(46, 125, 50, 0.18);
 
   /* Misc */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 32px rgba(194, 24, 91, 0.15);
+  --shadow-lg: 0 8px 32px rgba(46, 125, 50, 0.15);
   --radius-sm: 10px;
   --radius-md: 16px;
   --radius-lg: 24px;
