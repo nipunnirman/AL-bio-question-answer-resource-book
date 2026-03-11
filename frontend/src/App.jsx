@@ -26,28 +26,73 @@ function MainApp() {
   const sendMessage = useCallback(async (text) => {
     const question = (text ?? input).trim();
     if (!question || loading) return;
-    setMessages(prev => [...prev, { id: Date.now(), role: 'user', text: question, time: new Date() }]);
+    const userMsgId = Date.now();
+    const botMsgId = userMsgId + 1;
+
+    setMessages(prev => [
+      ...prev, 
+      { id: userMsgId, role: 'user', text: question, time: new Date() },
+      { id: botMsgId, role: 'bot', text: '', time: new Date() }
+    ]);
+    
     setInput('');
     setLoading(true);
+    let fullAnswer = "";
+
     try {
-      const res = await fetch('/qa', {
+      const res = await fetch('/qa/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ question }),
       });
+      
       if (!res.ok) throw new Error(`${res.status}`);
-      const data = await res.json();
-      setMessages(prev => [...prev, {
-        id: Date.now() + 1, role: 'bot', time: new Date(),
-        text: data.answer || 'I could not find an answer for that.',
-        citations: data.citations,
-      }]);
+      
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n\n');
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const dataStr = line.replace('data: ', '').trim();
+            if (!dataStr) continue;
+            
+            try {
+              const parsed = JSON.parse(dataStr);
+              if (parsed.answer_chunk) {
+                fullAnswer += parsed.answer_chunk;
+                setMessages(prev => prev.map(msg => 
+                  msg.id === botMsgId ? { ...msg, text: fullAnswer } : msg
+                ));
+              }
+              if (parsed.context || parsed.citations) {
+                setMessages(prev => prev.map(msg => 
+                  msg.id === botMsgId ? { ...msg, context: parsed.context || msg.context, citations: parsed.citations || msg.citations } : msg
+                ));
+              }
+            } catch (e) {
+              console.error("Error parsing stream chunk:", e);
+            }
+          }
+        }
+      }
     } catch {
-      setMessages(prev => [...prev, {
+      setMessages(prev => [...prev.filter(m => m.id !== botMsgId), {
         id: Date.now() + 2, role: 'bot', error: true, time: new Date(),
         text: '**Connection error.** Make sure the backend server is running and try again.',
       }]);
     } finally {
+      if (!fullAnswer) {
+          setMessages(prev => prev.map(msg => 
+              msg.id === botMsgId && msg.text === '' ? { ...msg, text: 'I could not find an answer for that.' } : msg
+          ));
+      }
       setLoading(false);
     }
   }, [input, loading, token]);
