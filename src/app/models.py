@@ -33,6 +33,13 @@ class QAResponse(BaseModel):
     citations: Optional[Dict[str, Dict[str, Any]]] = None
 
 
+class OCRResponse(BaseModel):
+    """
+    Response body for the `/ocr` endpoint.
+    """
+    text: str
+
+
 class UserCreate(BaseModel):
     username: str
     email: str
