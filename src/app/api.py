@@ -12,7 +12,6 @@ from .services.indexing_service import index_pdf_file
 import base64
 import io
 from PIL import Image
-import pytesseract
 
 app = FastAPI(
     title="A/L Biology RAG system",
@@ -109,10 +108,22 @@ async def ocr_endpoint(file: UploadFile = File(...)) -> OCRResponse:
     image = Image.open(io.BytesIO(contents))
 
     try:
+        import pytesseract
         # Extract Sinhala text using local Tesseract
         extracted_text = pytesseract.image_to_string(image, lang='sin')
         return OCRResponse(text=extracted_text)
+    except ImportError:
+        logging.error("pytesseract is not installed.")
+        raise HTTPException(status_code=500, detail="OCR library not installed on this server.")
     except Exception as e:
+        # Catch TesseractNotFoundError specifically if the binary isn't on the system (like Vercel)
+        if "tesseract is not installed" in str(e).lower():
+            logging.error("Tesseract binary not found on the system (Vercel constraint).")
+            raise HTTPException(
+                status_code=status.HTTP_501_NOT_IMPLEMENTED,
+                detail="OCR feature is strictly local. Tesseract cannot run on Vercel's serverless environment.",
+            )
+            
         logging.error(f"OCR failed: {e}")
         traceback.print_exc()
         raise HTTPException(
