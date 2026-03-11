@@ -3,11 +3,11 @@ import logging
 import traceback
 
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile, status
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from .models import QuestionRequest, QAResponse, OCRResponse
-from .services.qa_service import answer_question, answer_question_stream
+from .services.qa_service import answer_question
 from .services.indexing_service import index_pdf_file
 from .core.llm.factory import create_chat_model
 from langchain_core.messages import HumanMessage
@@ -93,16 +93,6 @@ async def qa_endpoint(payload: QuestionRequest) -> QAResponse:
         citations=result.get("citations"),
     )
 
-@app.post("/qa/stream")
-async def qa_stream_endpoint(payload: QuestionRequest):
-    """Submit a question and stream the answer via Server-Sent Events (SSE)."""
-    question = payload.question.strip()
-    if not question:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="`question` must be a non-empty string.",
-        )
-    return StreamingResponse(answer_question_stream(question), media_type="text/event-stream")
 
 @app.post("/ocr", response_model=OCRResponse, status_code=status.HTTP_200_OK)
 async def ocr_endpoint(file: UploadFile = File(...)) -> OCRResponse:

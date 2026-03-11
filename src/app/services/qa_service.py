@@ -4,10 +4,9 @@ with the multi-agent RAG pipeline without depending directly on LangGraph
 or agent implementation details.
 """
 import re
-from typing import Dict, Any, AsyncGenerator
-import json
+from typing import Dict, Any
 from langchain_core.messages import HumanMessage
-from ..core.agents.graph import run_qa_flow, get_qa_graph
+from ..core.agents.graph import run_qa_flow
 from ..core.llm.factory import create_chat_model
 
 def is_sinhala(text: str) -> bool:
@@ -45,63 +44,3 @@ def answer_question(question: str) -> Dict[str, Any]:
         # Expose the translated English question for debugging/UI purposes if desired
         result["english_question"] = english_question
     return result
-
-async def answer_question_stream(question: str) -> AsyncGenerator[str, None]:
-    """Asynchronous generator to stream the QA answer word-by-word via SSE."""
-    is_sin = is_sinhala(question)
-    llm = create_chat_model(temperature=0.0)
-    
-    # 1. Translate question if Sinhala
-    if is_sin:
-        translate_prompt = f"Translate the following Sinhala biology question to English. ONLY output the English translation, no other text:\n{question}"
-        english_question_msg = await llm.ainvoke([HumanMessage(content=translate_prompt)])
-        actual_question = str(english_question_msg.content)
-    else:
-        actual_question = question
-        
-    graph = get_qa_graph()
-    initial_state = {
-        "question": actual_question,
-        "context": "",
-        "draft_answer": "",
-        "answer": "",
-        "citations": {},
-    }
-
-    if is_sin:
-        # For Sinhala, run graph synchronously (or ainvoke) to get the final English answer, then stream the Sinhala translation
-        result = await graph.ainvoke(initial_state)
-        
-        # Stream the context out early if possible, or wait till the end
-        yield f'data: {json.dumps({{"citations": result.get("citations", {{}})}})}\n\n'
-        
-        translate_back_prompt = f"Translate the following biology text to Sinhala. Keep the markdown formatting (bolding, tables, lists) intact. ONLY output the Sinhala translation, no other text:\n\n{result.get('answer', '')}"
-        
-        async for chunk in llm.astream([HumanMessage(content=translate_back_prompt)]):
-            yield f'data: {json.dumps({{"answer_chunk": chunk.content}})}\n\n'
-            
-        # Final payload
-        yield f'data: {json.dumps({{"context": result.get("context", ""), "english_question": actual_question}})}\n\n'
-    else:
-        # For English, stream the verification node's LLM output
-        final_context = ""
-        final_citations = {}
-        
-        async for event in graph.astream_events(initial_state, version="v2"):
-            kind = event["event"]
-            if kind == "on_chat_model_stream":
-                metadata = event.get("metadata", {})
-                checkpoint_ns = metadata.get("checkpoint_ns", "")
-                if "verification" in checkpoint_ns:
-                    chunk_content = event["data"]["chunk"].content
-                    if chunk_content:
-                        yield f'data: {json.dumps({{"answer_chunk": chunk_content}})}\n\n'
-            elif kind == "on_chain_end" and event.get("name") == "LangGraph":
-                # The entire graph ended, capture the final state output
-                output_state = event["data"].get("output", {})
-                if isinstance(output_state, dict):
-                    final_context = output_state.get("context", "")
-                    final_citations = output_state.get("citations", {})
-                    
-        # Send final context after stream finishes
-        yield f'data: {json.dumps({{"context": final_context, "citations": final_citations}})}\n\n'

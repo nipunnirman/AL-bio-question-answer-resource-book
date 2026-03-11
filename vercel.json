@@ -19,10 +19,6 @@
             "dest": "api/index.py"
         },
         {
-            "src": "/qa/stream",
-            "dest": "api/index.py"
-        },
-        {
             "src": "/api/(.*)",
             "dest": "api/index.py"
         },
