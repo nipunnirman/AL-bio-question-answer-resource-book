@@ -9,9 +9,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from .models import QuestionRequest, QAResponse, OCRResponse
 from .services.qa_service import answer_question
 from .services.indexing_service import index_pdf_file
-from .core.llm.factory import create_chat_model
-from langchain_core.messages import HumanMessage
 import base64
+import io
+from PIL import Image
+import pytesseract
 
 app = FastAPI(
     title="A/L Biology RAG system",
@@ -103,36 +104,20 @@ async def ocr_endpoint(file: UploadFile = File(...)) -> OCRResponse:
             detail="Only image files are supported.",
         )
 
-    # Read image and encode to base64
+    # Read image into memory
     contents = await file.read()
-    base64_image = base64.b64encode(contents).decode('utf-8')
-
-    # Prepare message for GPT-4o Vision
-    llm = create_chat_model(temperature=0.0) # factory will use gpt-4o or default vision-capable model if configured
-    
-    # We explicitly ask for the exact Sinhala text
-    prompt = "Extract the Sinhala text from this biology multiple-choice question image exactly as it appears. Do NOT translate it or answer the question. Format the output with the question and then the numbered options clearly."
-    
-    message = HumanMessage(
-        content=[
-            {"type": "text", "text": prompt},
-            {
-                "type": "image_url",
-                "image_url": {"url": f"data:{file.content_type};base64,{base64_image}"},
-            },
-        ]
-    )
+    image = Image.open(io.BytesIO(contents))
 
     try:
-        response = llm.invoke([message])
-        extracted_text = str(response.content)
+        # Extract Sinhala text using local Tesseract
+        extracted_text = pytesseract.image_to_string(image, lang='sin')
         return OCRResponse(text=extracted_text)
     except Exception as e:
         logging.error(f"OCR failed: {e}")
         traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to extract text from image using Vision API.",
+            detail="Failed to extract text from image using local Tesseract OCR.",
         )
 
 
