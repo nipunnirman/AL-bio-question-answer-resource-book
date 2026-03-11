@@ -28,7 +28,7 @@ export default function BottomBar({ input, setInput, onSend, onQuickQuestion, di
             const formData = new FormData();
             formData.append("file", file);
 
-            const response = await fetch("http://localhost:8000/ocr", {
+            const response = await fetch("/ocr", {
                 method: "POST",
                 body: formData,
             });
