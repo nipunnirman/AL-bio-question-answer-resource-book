@@ -1,5 +1,4 @@
 import { useState, useRef } from 'react';
-import Tesseract from 'tesseract.js';
 
 const QUICK = [
     'What is DNA replication?',
@@ -26,13 +25,25 @@ export default function BottomBar({ input, setInput, onSend, onQuickQuestion, di
 
         setOcrLoading(true);
         try {
-            const result = await Tesseract.recognize(file, 'eng', {
-                logger: m => console.log(m)
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await fetch("http://localhost:8000/ocr", {
+                method: "POST",
+                body: formData,
             });
+
+            if (!response.ok) {
+                throw new Error("OCR API request failed");
+            }
+
+            const data = await response.json();
+            const extractedText = data.text ? data.text.trim() : "";
+            
             // Append the extracted text to whatever the user has currently typed
-            const extractedText = result.data.text.trim();
             const prefix = input ? input + '\n' : '';
             setInput(prefix + extractedText);
+            
         } catch (err) {
             console.error("OCR Failed:", err);
             alert("Failed to extract text from the image. Please try a clearer photo!");
