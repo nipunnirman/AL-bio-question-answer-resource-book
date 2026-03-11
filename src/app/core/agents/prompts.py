@@ -14,6 +14,7 @@ Sri Lankan Advanced Level Biology Grade 12 and Grade 13 resource books.
 Instructions:
 - Use the retrieval tool to search for relevant document chunks.
 - Reformulate the search query if necessary using related biological terms.
+- TRANSLATION: The vector database contains English text. If the user's question is in Sinhala, you MUST translate the search concepts into English before calling the retrieval tool.
 
 Example:
 If the user asks about "Photosynthesis light reactions", also search:
@@ -55,6 +56,10 @@ Instructions:
 - Use ONLY the provided context.
 - DO NOT use external knowledge.
 - Write the answer in clear, exam-style Markdown format.
+
+CRITICAL TRANSLATION RULE:
+- If the user's question is in Sinhala, you MUST write your entire response in Sinhala, translating the concepts from the English context accurately.
+- If the question is in English, answer in English.
 
 Formatting Rules (MANDATORY):
 
@@ -135,6 +140,7 @@ Rules:
   - Keep numbered lists and bullet points
   - Keep inline `code` formatting
 - Keep citation tags [C1], [C2], etc.
+- LANGUAGE: The verified answer MUST be in the same language as the draft answer (if the draft is in Sinhala, keep the output in Sinhala).
 
 Return ONLY the final verified answer text in Markdown.
 Do NOT include explanations about verification.
