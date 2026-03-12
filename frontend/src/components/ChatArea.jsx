@@ -3,7 +3,7 @@ import TypingIndicator from './TypingIndicator';
 
 export default function ChatArea({ messages, loading, chatEndRef }) {
   return (
-    <div className="chat-area" id="chat-area">
+    <div className="chat-area">
       {messages.map(msg => <MessageBubble key={msg.id} message={msg} />)}
       {loading && <TypingIndicator />}
       <div ref={chatEndRef} />

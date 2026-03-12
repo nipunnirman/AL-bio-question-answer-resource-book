@@ -50,9 +50,7 @@ function MainApp() {
         id: Date.now() + 2, role: 'bot', error: true, time: new Date(),
         text: '**Connection error.** Make sure the backend server is running and try again.',
       }]);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, [input, loading, token]);
 
   if (!token) return <AuthPage />;
@@ -64,10 +62,14 @@ function MainApp() {
         <div className="bg-blob bg-blob-2" />
         <div className="bg-blob bg-blob-3" />
       </div>
-      <div className="app-container">
+      <div className="app-root">
+        {/* Mobile sidebar overlay */}
+        {sidebarOpen && (
+          <div className="sidebar-overlay visible" onClick={() => setSidebarOpen(false)} />
+        )}
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <div className="app" style={{ flex: 1 }}>
-          <Header toggleSidebar={() => setSidebarOpen(prev => !prev)} />
+        <div className="chat-column">
+          <Header sidebarOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(p => !p)} />
           <Particles />
           <ChatArea messages={messages} loading={loading} chatEndRef={chatEndRef} />
           <BottomBar input={input} setInput={setInput} onSend={() => sendMessage()} onQuickQuestion={sendMessage} disabled={loading} />

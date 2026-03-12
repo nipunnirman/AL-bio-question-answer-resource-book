@@ -1,18 +1,14 @@
 import { useState } from 'react';
-
-function rand(min, max) { return Math.random() * (max - min) + min; }
-function mkP(id) {
-  return { id, size: rand(4, 12), left: rand(5, 95), duration: rand(14, 28), delay: rand(0, 18), startTop: rand(65, 100) };
-}
-
+const rand = (a, b) => Math.random() * (b - a) + a;
+const mkP = id => ({ id, size: rand(4,11), left: rand(5,95), dur: rand(15,30), delay: rand(0,20), top: rand(65,100) });
 export default function Particles() {
-  const [particles] = useState(() => Array.from({ length: 14 }, (_, i) => mkP(i)));
+  const [ps] = useState(() => Array.from({ length: 12 }, (_, i) => mkP(i)));
   return (
     <div className="particles-container">
-      {particles.map(p => (
+      {ps.map(p => (
         <div key={p.id} className="particle" style={{
-          width: p.size, height: p.size, left: `${p.left}%`, top: `${p.startTop}%`,
-          animationDuration: `${p.duration}s`, animationDelay: `${p.delay}s`,
+          width: p.size, height: p.size, left: `${p.left}%`, top: `${p.top}%`,
+          animationDuration: `${p.dur}s`, animationDelay: `${p.delay}s`,
         }} />
       ))}
     </div>
