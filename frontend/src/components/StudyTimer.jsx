@@ -56,7 +56,7 @@ export default function StudyTimer({ onSessionSaved }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const startTimeRef  = useRef(null);
-  const savedMinsRef  = useRef(0);          // study minutes saved when break started
+  const remainingStudySecsRef = useRef(0);
   const warnedRef     = useRef({ five: false, two: false, one: false });
 
   // ─── Fullscreen helpers ─────────────────────────────
@@ -117,7 +117,7 @@ export default function StudyTimer({ onSessionSaved }) {
   // ─── Actions ────────────────────────────────────────
   const startStudy = () => {
     startTimeRef.current = new Date().toISOString();
-    savedMinsRef.current = 0;
+    remainingStudySecsRef.current = 0;
     setSaved(false);
     setMode('study');
     setTimeLeft(studyMins * 60);
@@ -125,14 +125,9 @@ export default function StudyTimer({ onSessionSaved }) {
     enterFS();
   };
 
-  // Break: save partial study time → start break countdown
+  // Break: save remaining study time → start break countdown
   const startBreak = () => {
-    const done = studyMins - Math.ceil(timeLeft / 60);
-    if (done > 0) {
-      doSave(done);
-      savedMinsRef.current = done;
-    }
-    startTimeRef.current = null;
+    remainingStudySecsRef.current = timeLeft;
     warnedRef.current = { five: false, two: false, one: false };
     setMode('break');
     setTimeLeft(breakMins * 60);
@@ -140,12 +135,11 @@ export default function StudyTimer({ onSessionSaved }) {
     enterFS();
   };
 
-  // Continue: restart study timer after break ends
+  // Continue: resume remaining study time after break ends
   const continueStudy = () => {
-    startTimeRef.current = new Date().toISOString();
     setSaved(false);
     setMode('study');
-    setTimeLeft(studyMins * 60);
+    setTimeLeft(remainingStudySecsRef.current);
     setIsActive(true);
     enterFS();
   };
@@ -162,16 +156,17 @@ export default function StudyTimer({ onSessionSaved }) {
       warnedRef.current = { five: false, two: false, one: false };
       exitFS();
     } else if (mode === 'break') {
-      // Stopping break early → auto-restart study countdown
+      // Stopping break early → resume study countdown immediately
       warnedRef.current = { five: false, two: false, one: false };
-      startTimeRef.current = new Date().toISOString();
       setSaved(false);
       setMode('study');
-      setTimeLeft(studyMins * 60);
+      setTimeLeft(remainingStudySecsRef.current);
       setIsActive(true);
       enterFS();
     } else {
-      // break-done or any other → go idle
+      // break-done or any other → go idle, save partial if needed
+      const done = studyMins - Math.ceil(remainingStudySecsRef.current / 60);
+      if (done > 0) doSave(done);
       setMode('idle');
       setTimeLeft(0);
       startTimeRef.current = null;
@@ -222,7 +217,16 @@ export default function StudyTimer({ onSessionSaved }) {
 
   // SVG progress ring
   const totalSecs = isBreak ? breakMins * 60 : studyMins * 60;
-  const progress  = totalSecs > 0 ? (totalSecs - timeLeft) / totalSecs : 0;
+  // Calculate progress relative to the full setting
+  // For study, compare against full studyMins. For break, compare against full breakMins.
+  let progress = 0;
+  if (totalSecs > 0) {
+    if (isBreak) {
+      progress = (breakMins * 60 - timeLeft) / (breakMins * 60);
+    } else {
+      progress = (studyMins * 60 - timeLeft) / (studyMins * 60);
+    }
+  }
   const radius = 90;
   const circ   = 2 * Math.PI * radius;
   const dash   = circ * (1 - progress);
