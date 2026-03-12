@@ -7,7 +7,7 @@ This state object moves through the three-agent pipeline:
 3. Verification Agent
 """
 
-from typing import TypedDict, Dict, Any
+from typing import TypedDict, Dict, Any, Optional
 
 
 class QAState(TypedDict):
@@ -35,6 +35,12 @@ class QAState(TypedDict):
     """
 
     question: str
+
+    # Original question in user's language (may differ from `question` if translated for search)
+    original_question: Optional[str]
+
+    # Language to respond in: 'english' or 'sinhala'
+    response_language: Optional[str]
 
     context: str
 

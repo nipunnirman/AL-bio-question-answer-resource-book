@@ -16,42 +16,37 @@ def is_sinhala(text: str) -> bool:
 def answer_question(question: str) -> Dict[str, Any]:
     """Run the multi-agent QA flow for a given question.
 
-    Args:
-        question: User's natural language question about the A/L Biology knowledge base.
-
-    Returns:
-        Dictionary containing at least `answer` and `context` keys.
+    For Sinhala questions:
+      - Translates the question to English ONLY for the vector DB search
+      - Passes the original Sinhala question + 'sinhala' response_language to the pipeline
+      - The answer agents generate the answer natively in Sinhala (no back-translation)
+    For English questions:
+      - Sent directly to the pipeline as-is
     """
     is_sin = is_sinhala(question)
 
     if is_sin:
         llm = create_chat_model(temperature=0.0)
 
-        # Step 1: Translate Sinhala question → clear, biologically accurate English
+        # Translate ONLY for the vector search query — preserve biological meaning
         translate_prompt = (
             "You are a Sri Lankan A/L Biology expert fluent in both Sinhala and English.\n"
             "Translate the following Sinhala biology question into clear, natural English.\n"
             "Preserve all biological terminology accurately. Only output the English translation, nothing else.\n\n"
             f"Sinhala question:\n{question}"
         )
-        english_question = str(llm.invoke([HumanMessage(content=translate_prompt)]).content).strip()
+        english_query = str(llm.invoke([HumanMessage(content=translate_prompt)]).content).strip()
 
-        # Step 2: Run RAG on the English question
-        result = run_qa_flow(english_question)
-        result["english_question"] = english_question
-
-        # Step 3: Translate the English answer back to natural, friendly Sinhala
-        translate_back_prompt = (
-            "You are a Sri Lankan A/L Biology expert and teacher.\n"
-            "Translate the following English biology answer into natural, friendly Sinhala "
-            "as if you are explaining it to a student. Keep markdown formatting (bold, tables, lists) intact.\n"
-            "Only output the Sinhala translation, nothing else.\n\n"
-            f"English answer:\n{result.get('answer', '')}"
+        # Run RAG: retrieval uses English query, but answer is generated natively in Sinhala
+        result = run_qa_flow(
+            question=english_query,          # used for vector DB search only
+            original_question=question,       # original Sinhala — used for answer generation
+            response_language="sinhala",      # agents will write the answer in Sinhala natively
         )
-        result["answer"] = str(llm.invoke([HumanMessage(content=translate_back_prompt)]).content).strip()
+        result["english_question"] = english_query
 
     else:
-        # English question: send directly to RAG
-        result = run_qa_flow(question)
+        # English: plain flow, no translation needed
+        result = run_qa_flow(question=question, response_language="english")
 
     return result

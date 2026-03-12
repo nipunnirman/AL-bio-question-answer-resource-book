@@ -64,30 +64,29 @@ def get_qa_graph() -> Any:
 # QA Flow Runner
 # -------------------------------------------------------
 
-def run_qa_flow(question: str) -> Dict[str, Any]:
+def run_qa_flow(
+    question: str,
+    original_question: str = None,
+    response_language: str = "english",
+) -> Dict[str, Any]:
     """
     Run the complete multi-agent QA flow.
 
-    Steps:
-    1. Initialize state with user question
-    2. Execute LangGraph pipeline
-    3. Return final results
-
     Args:
-        question: User question (A/L Biology topic)
+        question: Question used for vector search (always in English).
+        original_question: The user's original question (may be Sinhala). Used for answer generation.
+        response_language: 'sinhala' or 'english'. Controls the language of the generated answer.
 
     Returns:
-        dict containing:
-        - answer: Final verified answer
-        - draft_answer: Draft answer from summarization agent
-        - context: Retrieved context
-        - citations: Source metadata if available
+        dict containing answer, draft_answer, context, citations.
     """
 
     graph = get_qa_graph()
 
     initial_state: QAState = {
         "question": question,
+        "original_question": original_question or question,
+        "response_language": response_language,
         "context": "",
         "draft_answer": "",
         "answer": "",

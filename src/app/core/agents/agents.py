@@ -114,11 +114,20 @@ def summarization_node(state: QAState) -> QAState:
     3. Store the draft answer in state["draft_answer"].
     """
 
-    question = state["question"]
+    # Use original question (in user's language) if available, otherwise fall back to translated
+    question = state.get("original_question") or state["question"]
     context = state.get("context", "")
+    response_language = state.get("response_language", "english")
+
+    language_instruction = (
+        "IMPORTANT: Write your entire answer in Sinhala (සිංහල). "
+        "Explain naturally and in a student-friendly way, like a helpful teacher would. "
+        "Keep all markdown formatting (bold, tables, lists) intact but in Sinhala.\n\n"
+        if response_language == "sinhala" else ""
+    )
 
     user_content = f"""
-Question:
+{language_instruction}Question:
 {question}
 
 Context:
@@ -153,12 +162,19 @@ def verification_node(state: QAState) -> QAState:
     4. Returns final verified answer.
     """
 
-    question = state["question"]
+    question = state.get("original_question") or state["question"]
     context = state.get("context", "")
     draft_answer = state.get("draft_answer", "")
+    response_language = state.get("response_language", "english")
+
+    language_instruction = (
+        "IMPORTANT: Your final verified answer must be written entirely in Sinhala (සිංහල). "
+        "Do not switch to English. Keep markdown formatting intact.\n\n"
+        if response_language == "sinhala" else ""
+    )
 
     user_content = f"""
-Question:
+{language_instruction}Question:
 {question}
 
 Context:
