@@ -22,8 +22,36 @@ def answer_question(question: str) -> Dict[str, Any]:
     Returns:
         Dictionary containing at least `answer` and `context` keys.
     """
-    
-    # Run RAG directly with the native question (OpenAI handles English/Sinhala inherently)
-    result = run_qa_flow(question)
-    
+    is_sin = is_sinhala(question)
+
+    if is_sin:
+        llm = create_chat_model(temperature=0.0)
+
+        # Step 1: Translate Sinhala question → clear, biologically accurate English
+        translate_prompt = (
+            "You are a Sri Lankan A/L Biology expert fluent in both Sinhala and English.\n"
+            "Translate the following Sinhala biology question into clear, natural English.\n"
+            "Preserve all biological terminology accurately. Only output the English translation, nothing else.\n\n"
+            f"Sinhala question:\n{question}"
+        )
+        english_question = str(llm.invoke([HumanMessage(content=translate_prompt)]).content).strip()
+
+        # Step 2: Run RAG on the English question
+        result = run_qa_flow(english_question)
+        result["english_question"] = english_question
+
+        # Step 3: Translate the English answer back to natural, friendly Sinhala
+        translate_back_prompt = (
+            "You are a Sri Lankan A/L Biology expert and teacher.\n"
+            "Translate the following English biology answer into natural, friendly Sinhala "
+            "as if you are explaining it to a student. Keep markdown formatting (bold, tables, lists) intact.\n"
+            "Only output the Sinhala translation, nothing else.\n\n"
+            f"English answer:\n{result.get('answer', '')}"
+        )
+        result["answer"] = str(llm.invoke([HumanMessage(content=translate_back_prompt)]).content).strip()
+
+    else:
+        # English question: send directly to RAG
+        result = run_qa_flow(question)
+
     return result

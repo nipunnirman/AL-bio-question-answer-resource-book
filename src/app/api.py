@@ -120,11 +120,25 @@ async def ocr_endpoint(file: UploadFile = File(...)) -> OCRResponse:
     llm = create_chat_model(temperature=0.0)
 
     prompt = (
-        "You are an OCR tool. Your ONLY job is to read and return the text written in this image. "
-        "The image contains a biology multiple-choice question in Sinhala or English. "
-        "Transcribe ALL text in the image exactly as it appears — including the question and all answer options. "
-        "Do NOT answer the question. Do NOT translate anything. Do NOT summarize. "
-        "Just return the raw text content from the image."
+        "You are an intelligent OCR parser for Sri Lankan A/L Biology exam papers.\n\n"
+        "This image contains part of a biology exam paper that may have:\n"
+        "- Exam instructions at the top (ignore these)\n"
+        "- Page headers or footers (ignore these)\n"
+        "- Page numbers (ignore these)\n"
+        "- One or more numbered MCQ questions, each with 5 options labeled (1) to (5)\n\n"
+        "Your job:\n"
+        "1. Extract ONLY the MCQ question(s) and their answer options (1)-(5). Ignore everything else.\n"
+        "2. If the text is in Sinhala, translate it clearly and naturally into English so it makes biological sense.\n"
+        "3. If the text is already in English, keep it as-is.\n\n"
+        "Output format (one question per block):\n"
+        "Question: <question text in English>\n"
+        "(1) <option 1>\n"
+        "(2) <option 2>\n"
+        "(3) <option 3>\n"
+        "(4) <option 4>\n"
+        "(5) <option 5>\n\n"
+        "If there are multiple questions, separate each block with a blank line.\n"
+        "Output ONLY the formatted question blocks. Nothing else."
     )
 
     message = HumanMessage(
