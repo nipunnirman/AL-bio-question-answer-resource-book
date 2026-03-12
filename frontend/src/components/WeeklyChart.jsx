@@ -1,102 +1,87 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
+  Chart as ChartJS, CategoryScale, LinearScale,
+  BarElement, Title, Tooltip, Legend,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
+const SUBJECTS = [
+  { id: 'Biology',        color: 'rgba(45,134,83,0.75)',   border: '#2d8653' },
+  { id: 'Chemistry',      color: 'rgba(217,88,88,0.75)',   border: '#d95858' },
+  { id: 'Physics',        color: 'rgba(58,123,213,0.75)',  border: '#3a7bd5' },
+  { id: 'Combined Maths', color: 'rgba(200,163,0,0.75)',   border: '#c8a300' },
+];
 
 export default function WeeklyChart({ refreshTrigger }) {
-    const { token } = useAuth();
-    const [chartData, setChartData] = useState(null);
-    const [loading, setLoading] = useState(true);
+  const { token } = useAuth();
+  const [chartData, setChartData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchStats = async () => {
-            try {
-                const res = await fetch('/api/study/weekly', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    
-                    // Format dates for labels
-                    const labels = data.map(d => {
-                        const date = new Date(d.date);
-                        return date.toLocaleDateString('en-US', { weekday: 'short' });
-                    });
-                    
-                    const minutes = data.map(d => d.total_minutes);
+  useEffect(() => {
+    if (!token) return;
+    const fetch_ = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch('/api/study/weekly', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json(); // [{date, subjects:{Biology:30,...}},...]
 
-                    setChartData({
-                        labels,
-                        datasets: [
-                            {
-                                label: 'Study Minutes',
-                                data: minutes,
-                                backgroundColor: 'rgba(74, 124, 89, 0.7)', // var(--sage)
-                                borderRadius: 4,
-                            }
-                        ]
-                    });
-                }
-            } catch (error) {
-                console.error("Failed to load study stats", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+        const labels = data.map(d => {
+          const dt = new Date(d.date + 'T00:00:00');
+          return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        });
 
-        if (token) {
-            fetchStats();
-        }
-    }, [token, refreshTrigger]);
+        const datasets = SUBJECTS.map(s => ({
+          label: s.id,
+          data: data.map(d => d.subjects[s.id] || 0),
+          backgroundColor: s.color,
+          borderColor: s.border,
+          borderWidth: 1,
+          borderRadius: 4,
+        }));
 
-    const options = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false },
-            title: {
-                display: true,
-                text: 'Study Time (Last 7 Days)',
-                color: '#2d5a3d',
-                font: { family: "'Plus Jakarta Sans', sans-serif", size: 13, weight: 600 }
-            },
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                grid: { color: 'rgba(74, 124, 89, 0.1)' },
-                ticks: { color: '#6b8074', font: { size: 10 } }
-            },
-            x: {
-                grid: { display: false },
-                ticks: { color: '#6b8074', font: { size: 10 } }
-            }
-        }
+        setChartData({ labels, datasets });
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     };
+    fetch_();
+  }, [token, refreshTrigger]);
 
-    if (loading) return <div className="chart-loading">Loading chart...</div>;
-    if (!chartData) return null;
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { boxWidth: 10, font: { size: 10 }, color: '#3d5247' },
+      },
+      title: {
+        display: true,
+        text: 'Your Weekly Study Progress',
+        color: '#2d5a3d',
+        font: { family: "'Plus Jakarta Sans', sans-serif", size: 13, weight: 600 },
+      },
+    },
+    scales: {
+      x: { stacked: true, grid: { display: false }, ticks: { color: '#6b8074', font: { size: 10 } } },
+      y: { stacked: true, beginAtZero: true, grid: { color: 'rgba(74,124,89,0.1)' }, ticks: { color: '#6b8074', font: { size: 10 } } },
+    },
+  };
 
-    return (
-        <div className="weekly-chart-container">
-            <Bar options={options} data={chartData} />
-        </div>
-    );
+  if (loading) return <div className="chart-loading">Loading chart…</div>;
+  if (!chartData) return null;
+
+  return (
+    <div className="weekly-chart-container">
+      <Bar options={options} data={chartData} />
+    </div>
+  );
 }

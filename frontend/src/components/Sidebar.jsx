@@ -1,34 +1,95 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import StudyTimer from './StudyTimer';
 import WeeklyChart from './WeeklyChart';
 
+const SUBJECT_COLORS = {
+  'Biology':        '#2d8653',
+  'Chemistry':      '#d95858',
+  'Physics':        '#3a7bd5',
+  'Combined Maths': '#c8a300',
+};
+
+function formatClock(isoStr) {
+  if (!isoStr) return '';
+  return new Date(isoStr).toLocaleTimeString('en-US', {
+    hour: '2-digit', minute: '2-digit', hour12: true,
+  });
+}
+
 export default function Sidebar({ isOpen, onClose }) {
-    const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { token } = useAuth();
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [todaySessions, setTodaySessions]   = useState([]);
 
-    const handleSessionSaved = useCallback(() => {
-        // Trigger a re-render of the chart to show the new data
-        setRefreshTrigger(prev => prev + 1);
-    }, []);
+  const loadToday = useCallback(async () => {
+    try {
+      const res = await fetch('/api/study/sessions/today', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) setTodaySessions(await res.json());
+    } catch {}
+  }, [token]);
 
-    if (!isOpen) return null;
+  useEffect(() => {
+    if (isOpen && token) loadToday();
+  }, [isOpen, token, refreshTrigger]);
 
-    return (
-        <div className="sidebar" aria-hidden={!isOpen}>
-            <div className="sidebar-header">
-                <h2>📚 Study Help</h2>
-                <button className="sidebar-close-btn" onClick={onClose} aria-label="Close sidebar">
-                    ✕
-                </button>
-            </div>
-            
-            <div className="sidebar-content">
-                <StudyTimer onSessionSaved={handleSessionSaved} />
-                
-                <hr className="sidebar-divider" />
-                
-                <h3 className="section-title">📊 Your Progress</h3>
-                <WeeklyChart refreshTrigger={refreshTrigger} />
-            </div>
+  const handleSessionSaved = useCallback(() => {
+    setRefreshTrigger(p => p + 1);
+  }, []);
+
+  if (!isOpen) return null;
+
+  // Total minutes today
+  const totalToday = todaySessions.reduce((s, x) => s + x.duration_minutes, 0);
+
+  return (
+    <div className="sidebar">
+      <div className="sidebar-header">
+        <h2>📚 Study Help</h2>
+        <button className="sidebar-close-btn" onClick={onClose}>✕</button>
+      </div>
+
+      <div className="sidebar-content">
+        {/* Timer */}
+        <StudyTimer onSessionSaved={handleSessionSaved} />
+
+        {/* Today's sessions */}
+        <hr className="sidebar-divider" />
+        <div className="sessions-header">
+          <h3 className="section-title">Today's Sessions</h3>
+          {totalToday > 0 && (
+            <span className="sessions-total">{totalToday} min total</span>
+          )}
         </div>
-    );
+
+        {todaySessions.length === 0 ? (
+          <p className="sessions-empty">No sessions saved yet today.</p>
+        ) : (
+          <ul className="sessions-list">
+            {todaySessions.map((s, i) => (
+              <li key={i} className="session-row">
+                <span className="session-dot" style={{ background: SUBJECT_COLORS[s.subject] || '#888' }} />
+                <div className="session-info">
+                  <span className="session-subject" style={{ color: SUBJECT_COLORS[s.subject] }}>
+                    {s.subject}
+                  </span>
+                  <span className="session-time">
+                    {formatClock(s.start_time)} → {formatClock(s.end_time)}
+                  </span>
+                </div>
+                <span className="session-dur">{s.duration_minutes} min</span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* Weekly chart */}
+        <hr className="sidebar-divider" />
+        <h3 className="section-title">My Progress</h3>
+        <WeeklyChart refreshTrigger={refreshTrigger} />
+      </div>
+    </div>
+  );
 }
