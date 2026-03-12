@@ -61,10 +61,12 @@ export default function StudyTimer({ onSessionSaved }) {
     setIsActive(false);
     getAudio().play().catch(() => {});
     if (mode === 'study') {
-      saveSession(studyMins);           // auto-save full session
-      setMode('break');
-      setTimeLeft(breakMins * 60);
+      saveSession(studyMins);   // auto-save the completed session
+      setMode('idle');          // go back to idle — user can start a new session
+      setTimeLeft(0);
+      startTimeRef.current = null;
     } else {
+      // break finished
       setMode('idle');
     }
   };
