@@ -15,57 +15,88 @@ const SUBJECTS = [
   { id: 'Combined Maths', color: 'rgba(200,163,0,0.75)',   border: '#c8a300' },
 ];
 
-export default function WeeklyChart({ refreshTrigger }) {
+// Build last-7-days chart data from localStorage sessions
+function buildLocalChartData(userId) {
+  const today = new Date();
+  const dates = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() - (6 - i));
+    return d.toISOString().split('T')[0];
+  });
+
+  const labels = dates.map(d => {
+    const dt = new Date(d + 'T00:00:00');
+    return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  });
+
+  // Aggregate per date per subject from localStorage
+  const stats = {};
+  dates.forEach(d => { stats[d] = {}; });
+
+  dates.forEach(dateStr => {
+    const key = `study_sessions_${userId}_${dateStr}`;
+    try {
+      const sessions = JSON.parse(localStorage.getItem(key) || '[]');
+      sessions.forEach(s => {
+        stats[dateStr][s.subject] = (stats[dateStr][s.subject] || 0) + s.duration_minutes;
+      });
+    } catch {}
+  });
+
+  const datasets = SUBJECTS.map(s => ({
+    label: s.id,
+    data: dates.map(d => stats[d][s.id] || 0),
+    backgroundColor: s.color,
+    borderColor: s.border,
+    borderWidth: 1,
+    borderRadius: 4,
+  }));
+
+  return { labels, datasets };
+}
+
+export default function WeeklyChart({ refreshTrigger, userId }) {
   const { token } = useAuth();
   const [chartData, setChartData] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!token) return;
-    const fetch_ = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch('/api/study/weekly', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) return;
-        const data = await res.json(); // [{date, subjects:{Biology:30,...}},...]
+    if (!userId) return;
 
-        const labels = data.map(d => {
-          const dt = new Date(d.date + 'T00:00:00');
-          return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-        });
+    // Always build from localStorage immediately (guaranteed to work)
+    setChartData(buildLocalChartData(userId));
 
-        const datasets = SUBJECTS.map(s => ({
-          label: s.id,
-          data: data.map(d => d.subjects[s.id] || 0),
-          backgroundColor: s.color,
-          borderColor: s.border,
-          borderWidth: 1,
-          borderRadius: 4,
-        }));
-
-        setChartData({ labels, datasets });
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetch_();
-  }, [token, refreshTrigger]);
+    // Try to also fetch from backend (syncs server data if available)
+    if (token) {
+      fetch('/api/study/weekly', { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (!data) return;
+          const labels = data.map(d => {
+            const dt = new Date(d.date + 'T00:00:00');
+            return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          });
+          const datasets = SUBJECTS.map(s => ({
+            label: s.id,
+            data: data.map(d => d.subjects[s.id] || 0),
+            backgroundColor: s.color,
+            borderColor: s.border,
+            borderWidth: 1,
+            borderRadius: 4,
+          }));
+          setChartData({ labels, datasets });
+        })
+        .catch(() => {}); // Silently ignore — localStorage data is already shown
+    }
+  }, [token, refreshTrigger, userId]);
 
   const options = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        position: 'bottom',
-        labels: { boxWidth: 10, font: { size: 10 }, color: '#3d5247' },
-      },
+      legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 }, color: '#3d5247' } },
       title: {
         display: true,
-        text: 'Your Weekly Study Progress',
+        text: 'Weekly Study Progress',
         color: '#2d5a3d',
         font: { family: "'Plus Jakarta Sans', sans-serif", size: 13, weight: 600 },
       },
@@ -76,8 +107,7 @@ export default function WeeklyChart({ refreshTrigger }) {
     },
   };
 
-  if (loading) return <div className="chart-loading">Loading chart…</div>;
-  if (!chartData) return null;
+  if (!chartData) return <div className="chart-loading">Loading…</div>;
 
   return (
     <div className="weekly-chart-container">

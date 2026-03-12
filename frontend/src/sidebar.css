@@ -8,6 +8,23 @@
   width: 100%;
 }
 
+.save-success {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: #2d8653;
+  font-weight: 600;
+  text-align: center;
+  animation: fade-in-out 3s ease forwards;
+}
+
+@keyframes fade-in-out {
+  0%   { opacity: 0; transform: translateY(4px); }
+  15%  { opacity: 1; transform: none; }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+
 /* ═══════════════════════════════════
    SIDEBAR
 ═══════════════════════════════════ */

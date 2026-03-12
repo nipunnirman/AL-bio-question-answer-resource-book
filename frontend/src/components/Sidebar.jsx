@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import StudyTimer from './StudyTimer';
+import StudyTimer, { loadTodaySessions } from './StudyTimer';
 import WeeklyChart from './WeeklyChart';
 
 const SUBJECT_COLORS = {
@@ -18,30 +18,28 @@ function formatClock(isoStr) {
 }
 
 export default function Sidebar({ isOpen, onClose }) {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [todaySessions, setTodaySessions]   = useState([]);
 
-  const loadToday = useCallback(async () => {
-    try {
-      const res = await fetch('/api/study/sessions/today', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) setTodaySessions(await res.json());
-    } catch {}
-  }, [token]);
+  const userId = user?.username || user?.id || 'guest';
+
+  // Load sessions from localStorage (always works, instant)
+  const loadSessions = useCallback(() => {
+    const local = loadTodaySessions(userId);
+    setTodaySessions(local);
+  }, [userId]);
 
   useEffect(() => {
-    if (isOpen && token) loadToday();
-  }, [isOpen, token, refreshTrigger]);
+    if (isOpen) loadSessions();
+  }, [isOpen, refreshTrigger, loadSessions]);
 
   const handleSessionSaved = useCallback(() => {
-    setRefreshTrigger(p => p + 1);
+    setRefreshTrigger(p => p + 1);   // triggers loadSessions above
   }, []);
 
   if (!isOpen) return null;
 
-  // Total minutes today
   const totalToday = todaySessions.reduce((s, x) => s + x.duration_minutes, 0);
 
   return (
@@ -88,7 +86,7 @@ export default function Sidebar({ isOpen, onClose }) {
         {/* Weekly chart */}
         <hr className="sidebar-divider" />
         <h3 className="section-title">My Progress</h3>
-        <WeeklyChart refreshTrigger={refreshTrigger} />
+        <WeeklyChart refreshTrigger={refreshTrigger} localSessions={todaySessions} userId={userId} />
       </div>
     </div>
   );

@@ -4,55 +4,63 @@ import { useAuth } from '../context/AuthContext';
 const STUDY_OPTIONS = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
 const BREAK_OPTIONS = [5, 10];
 
-const SUBJECTS = [
-  { id: 'Biology',        label: 'Bio',           color: '#2d8653', bg: '#e8f5ec' },
-  { id: 'Chemistry',      label: 'Chemistry',      color: '#d95858', bg: '#fdf0f0' },
-  { id: 'Physics',        label: 'Physics',        color: '#3a7bd5', bg: '#eef3fd' },
-  { id: 'Combined Maths', label: 'Comb. Maths',   color: '#c8a300', bg: '#fdf8e1' },
+export const SUBJECTS = [
+  { id: 'Biology',        label: 'Bio',          color: '#2d8653', bg: '#e8f5ec' },
+  { id: 'Chemistry',      label: 'Chemistry',    color: '#d95858', bg: '#fdf0f0' },
+  { id: 'Physics',        label: 'Physics',      color: '#3a7bd5', bg: '#eef3fd' },
+  { id: 'Combined Maths', label: 'Comb. Maths', color: '#c8a300', bg: '#fdf8e1' },
 ];
 
+// ─── localStorage helpers ────────────────────────────────
+const todayKey = (userId) => `study_sessions_${userId}_${new Date().toISOString().split('T')[0]}`;
+
+export function loadTodaySessions(userId) {
+  try {
+    return JSON.parse(localStorage.getItem(todayKey(userId)) || '[]');
+  } catch { return []; }
+}
+
+function saveTodaySession(userId, session) {
+  const existing = loadTodaySessions(userId);
+  existing.push(session);
+  localStorage.setItem(todayKey(userId), JSON.stringify(existing));
+}
+
+// ─── Format helpers ─────────────────────────────────────
 function formatTime(sec) {
   return `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(sec % 60).padStart(2, '0')}`;
 }
 
-function formatClock(isoStr) {
-  if (!isoStr) return '';
-  const d = new Date(isoStr);
-  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-}
-
 export default function StudyTimer({ onSessionSaved }) {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
-  const [subject, setSubject]           = useState(SUBJECTS[0]);
-  const [studyMins, setStudyMins]       = useState(25);
-  const [breakMins, setBreakMins]       = useState(5);
-  const [mode, setMode]                 = useState('idle');    // idle | study | break
-  const [timeLeft, setTimeLeft]         = useState(0);
-  const [isActive, setIsActive]         = useState(false);
-  const [isSaving, setIsSaving]         = useState(false);
+  const [subject, setSubject]     = useState(SUBJECTS[0]);
+  const [studyMins, setStudyMins] = useState(25);
+  const [breakMins, setBreakMins] = useState(5);
+  const [mode, setMode]           = useState('idle');
+  const [timeLeft, setTimeLeft]   = useState(0);
+  const [isActive, setIsActive]   = useState(false);
+  const [isSaving, setIsSaving]   = useState(false);
+  const [saved, setSaved]         = useState(false);
 
-  const startTimeRef = useRef(null);   // ISO string of when the study clock started
+  const startTimeRef = useRef(null);
   const audioRef     = useRef(null);
 
-  // Lazy-init audio
   const getAudio = () => {
     if (!audioRef.current) {
-      audioRef.current = new Audio(
-        'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'
-      );
+      audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
     }
     return audioRef.current;
   };
 
-  // Countdown tick
+  // Countdown
   useEffect(() => {
     if (!isActive || timeLeft <= 0) return;
     const id = setInterval(() => setTimeLeft(t => t - 1), 1000);
     return () => clearInterval(id);
   }, [isActive, timeLeft]);
 
-  // Timer hit 0
+  // Timer finished
   useEffect(() => {
     if (isActive && timeLeft === 0) onTimerDone();
   }, [timeLeft, isActive]);
@@ -61,33 +69,26 @@ export default function StudyTimer({ onSessionSaved }) {
     setIsActive(false);
     getAudio().play().catch(() => {});
     if (mode === 'study') {
-      saveSession(studyMins);   // auto-save the completed session
-      setMode('idle');          // go back to idle — user can start a new session
-      setTimeLeft(0);
-      startTimeRef.current = null;
-    } else {
-      // break finished
-      setMode('idle');
+      doSave(studyMins);
     }
+    setMode('idle');
+    setTimeLeft(0);
+    startTimeRef.current = null;
   };
 
   const startStudy = () => {
     startTimeRef.current = new Date().toISOString();
+    setSaved(false);
     setMode('study');
     setTimeLeft(studyMins * 60);
     setIsActive(true);
   };
 
-  const pauseTimer  = () => setIsActive(false);
-  const resumeTimer = () => setIsActive(true);
-
   const stopTimer = () => {
     setIsActive(false);
     if (mode === 'study') {
       const done = studyMins - Math.ceil(timeLeft / 60);
-      if (done > 0) {
-        saveSession(done);   // auto-save elapsed time on stop
-      }
+      if (done > 0) doSave(done);
     }
     setMode('idle');
     setTimeLeft(0);
@@ -98,38 +99,40 @@ export default function StudyTimer({ onSessionSaved }) {
     if (mode !== 'study') return;
     const done = studyMins - Math.ceil(timeLeft / 60);
     if (done < 1) { alert('No full minute yet!'); return; }
-    // Save and end the session — return to idle
-    saveSession(done);
+    doSave(done);
     setIsActive(false);
     setMode('idle');
     setTimeLeft(0);
     startTimeRef.current = null;
   };
 
-  const saveSession = async (minutes) => {
-    setIsSaving(true);
+  const doSave = (minutes) => {
     const now  = new Date().toISOString();
     const date = now.split('T')[0];
-    try {
-      await fetch('/api/study/session', {
+    const sessionData = {
+      subject:          subject.id,
+      start_time:       startTimeRef.current || now,
+      end_time:         now,
+      duration_minutes: minutes,
+      date,
+    };
+
+    // ① Save to localStorage immediately → sidebar updates instantly
+    const userId = user?.username || user?.id || 'guest';
+    saveTodaySession(userId, sessionData);
+    setSaved(true);
+    if (onSessionSaved) onSessionSaved();
+
+    // ② Try to sync to backend (background — doesn't block UI)
+    if (token) {
+      fetch('/api/study/session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          subject: subject.id,
-          start_time: startTimeRef.current || now,
-          end_time: now,
-          duration_minutes: minutes,
-          date,
-        }),
-      });
-      if (onSessionSaved) onSessionSaved();
-    } catch (e) {
-      console.error('Save failed', e);
-    } finally {
-      setIsSaving(false);
+        body: JSON.stringify(sessionData),
+      }).catch(err => console.warn('Backend sync failed (offline?):', err));
     }
   };
 
@@ -154,17 +157,16 @@ export default function StudyTimer({ onSessionSaved }) {
         ))}
       </div>
 
-      {/* Timer display */}
+      {/* Timer Display */}
       <div className="timer-display" style={{ color: mode === 'idle' ? '#9cb4a4' : subjectColor }}>
         {mode === 'idle' ? formatTime(studyMins * 60) : formatTime(timeLeft)}
       </div>
 
-      {/* Mode label */}
       <div className="timer-mode-label" style={{ color: subjectColor }}>
         {mode === 'study' ? `📖 ${subject.id}` : mode === 'break' ? '☕ Break' : ''}
       </div>
 
-      {/* Settings (only in idle) */}
+      {/* Settings */}
       {mode === 'idle' && (
         <div className="timer-settings">
           <label>
@@ -189,20 +191,20 @@ export default function StudyTimer({ onSessionSaved }) {
             Start
           </button>
         )}
-        {mode !== 'idle' && !isActive && (
-          <button className="btn-primary" style={{ background: subjectColor }} onClick={resumeTimer}>
+        {mode === 'study' && !isActive && (
+          <button className="btn-primary" style={{ background: subjectColor }} onClick={() => setIsActive(true)}>
             Resume
           </button>
         )}
-        {mode !== 'idle' && isActive && (
-          <button className="btn-secondary" onClick={pauseTimer}>Pause</button>
+        {mode === 'study' && isActive && (
+          <button className="btn-secondary" onClick={() => setIsActive(false)}>Pause</button>
         )}
         {mode === 'study' && (
           <button className="btn-outline" onClick={stopTimer}>Stop</button>
         )}
       </div>
 
-      {/* Manual Save */}
+      {/* Manual Save and Close */}
       {mode === 'study' && (
         <button
           className="btn-save-manual"
@@ -210,8 +212,13 @@ export default function StudyTimer({ onSessionSaved }) {
           onClick={manualSave}
           disabled={isSaving}
         >
-          {isSaving ? 'Saving…' : '💾 Save Session'}
+          {isSaving ? 'Saving…' : '💾 Save & Close Session'}
         </button>
+      )}
+
+      {/* Save success flash */}
+      {saved && mode === 'idle' && (
+        <p className="save-success">✅ Session saved!</p>
       )}
     </div>
   );
