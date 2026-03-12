@@ -38,7 +38,12 @@ def answer_question(question: str) -> Dict[str, Any]:
     
     # 3. Translate the final answer back to Sinhala if the input was Sinhala
     if is_sin:
-        translate_back_prompt = f"Translate the following biology text to Sinhala. Keep the markdown formatting (bolding, tables, lists) intact. ONLY output the Sinhala translation, no other text:\n\n{result.get('answer', '')}"
+        translate_back_prompt = (
+            "Translate the following biology text to Sinhala. Provide the answer in a natural, conversational, "
+            "and human-friendly style, as if a helpful teacher is explaining it to a student. "
+            "Keep the markdown formatting (bolding, tables, lists) intact. ONLY output the Sinhala translation, no other text:\n\n"
+            f"{result.get('answer', '')}"
+        )
         sinhala_answer = str(llm.invoke([HumanMessage(content=translate_back_prompt)]).content)
         result["answer"] = sinhala_answer
         # Expose the translated English question for debugging/UI purposes if desired
