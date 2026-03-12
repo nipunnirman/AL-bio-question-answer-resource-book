@@ -85,8 +85,8 @@ export default function StudyTimer({ onSessionSaved }) {
     setIsActive(false);
     if (mode === 'study') {
       const done = studyMins - Math.ceil(timeLeft / 60);
-      if (done > 0 && window.confirm(`Save ${done} min of ${subject.label} study?`)) {
-        saveSession(done);
+      if (done > 0) {
+        saveSession(done);   // auto-save elapsed time on stop
       }
     }
     setMode('idle');
@@ -97,8 +97,13 @@ export default function StudyTimer({ onSessionSaved }) {
   const manualSave = () => {
     if (mode !== 'study') return;
     const done = studyMins - Math.ceil(timeLeft / 60);
-    if (done < 1) { alert("No full minute yet!"); return; }
+    if (done < 1) { alert('No full minute yet!'); return; }
+    // Save and end the session — return to idle
     saveSession(done);
+    setIsActive(false);
+    setMode('idle');
+    setTimeLeft(0);
+    startTimeRef.current = null;
   };
 
   const saveSession = async (minutes) => {
