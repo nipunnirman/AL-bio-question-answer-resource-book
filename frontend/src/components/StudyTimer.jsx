@@ -290,13 +290,17 @@ export default function StudyTimer({ onSessionSaved }) {
           {/* Fullscreen controls */}
           {!isBreakDone && (
             <div className="timer-controls fs-controls">
+              {/* ── Study mode ── */}
               {mode === 'study' && isActive && (
-                <button className="btn-break" onClick={startBreak}>☕ Break</button>
+                <button className="btn-break" onClick={startBreak}>☕ Take Break</button>
               )}
               {mode === 'study' && !isActive && (
                 <button className="btn-primary" style={{ background: subjectColor }} onClick={() => setIsActive(true)}>
-                  Resume
+                  ▶ Resume
                 </button>
+              )}
+              {mode === 'study' && (
+                <button className="btn-outline" onClick={stopTimer}>⏹ Stop Session</button>
               )}
               {mode === 'study' && (
                 <button className="btn-save-manual"
@@ -304,6 +308,25 @@ export default function StudyTimer({ onSessionSaved }) {
                   onClick={manualSave} disabled={isSaving}>
                   {isSaving ? 'Saving…' : '💾 Save & Close'}
                 </button>
+              )}
+
+              {/* ── Break mode ── */}
+              {isBreak && (
+                <button className="btn-continue" style={{ background: subjectColor }} onClick={stopTimer}>
+                  ▶ Stop Break &amp; Resume
+                </button>
+              )}
+              {isBreak && (
+                <button className="btn-outline" onClick={() => {
+                  // End session entirely from break
+                  setIsActive(false);
+                  const done = studyMins - Math.ceil(remainingStudySecsRef.current / 60);
+                  if (done > 0) doSave(done);
+                  setMode('idle');
+                  setTimeLeft(0);
+                  startTimeRef.current = null;
+                  exitFS();
+                }}>⏹ End Session</button>
               )}
             </div>
           )}

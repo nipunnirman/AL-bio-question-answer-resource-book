@@ -785,7 +785,7 @@ body {
   }
   .fs-close-btn:hover { background: rgba(220,74,74,0.18); }
 
-  .fs-ring-wrap { position: relative; width: 210px; height: 210px; margin-top: 76px; }
+  .fs-ring-wrap { position: relative; width: 210px; height: 210px; margin-top: 80px; }
   .fs-ring { width: 100%; height: 100%; transform: rotate(-90deg); }
   .fs-ring-bg { fill: none; stroke: var(--border-dark); stroke-width: 8; }
   .fs-ring-fg { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.4s; }
@@ -806,9 +806,11 @@ body {
   .fs-break-hint {
     font-size: 12px; color: #a07020; background: #fff8e6;
     border: 1px solid #f5d881; border-radius: var(--r-md);
-    padding: 7px 14px; text-align: center; max-width: 80%;
+    padding: 8px 16px; text-align: center; max-width: min(340px, 88vw);
+    margin-bottom: 4px;
   }
-  .fs-controls { flex-direction: column; align-items: center; width: 80%; gap: 10px; }
-  .fs-controls button { width: 100%; padding: 13px 18px; font-size: 14.5px; }
-  .fs-controls .btn-save-manual { margin-top: 0; width: 100%; }
+  .fs-controls { flex-direction: column !important; align-items: center; width: min(340px, 88vw); gap: 10px; }
+  .fs-controls button { width: 100%; padding: 14px 18px; font-size: 15px; border-radius: var(--r-pill) !important; }
+  .fs-controls .btn-save-manual { margin-top: 0; width: 100%; padding: 13px; border-radius: var(--r-sm) !important; }
+  .fs-controls .btn-outline { border: 1.5px solid var(--err-border) !important; }
 }
