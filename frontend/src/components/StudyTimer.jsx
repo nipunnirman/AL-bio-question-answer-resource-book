@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 
-const STUDY_OPTIONS = [10, 15, 20, 25, 30, 35, 40, 45, 50];
+const STUDY_OPTIONS = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
 const BREAK_OPTIONS = [5, 10];
 
 const SUBJECTS = [
