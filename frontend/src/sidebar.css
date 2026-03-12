@@ -1,0 +1,223 @@
+
+/* ═══════════════════════════════
+   SIDEBAR & STUDY HELP
+═══════════════════════════════ */
+.app-container {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.sidebar {
+  width: 300px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: transform 0.3s var(--spring);
+  height: 100%;
+  z-index: 20;
+}
+
+.sidebar-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-header h2 {
+  font-family: 'Lora', serif;
+  font-size: 18px;
+  color: var(--forest);
+  margin: 0;
+}
+
+.sidebar-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  color: var(--ink-3);
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.sidebar-close-btn:hover {
+  color: var(--error);
+}
+
+.sidebar-content {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.section-title {
+  font-size: 14px;
+  color: var(--ink-2);
+  margin-bottom: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sidebar-divider {
+  border: none;
+  border-top: 1px dashed var(--border-strong);
+  margin: 30px 0;
+}
+
+/* Study Timer */
+.study-timer {
+  background: var(--surface);
+  border-radius: var(--r-md);
+  padding: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.timer-title {
+  font-size: 15px;
+  color: var(--forest);
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.timer-display {
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 42px;
+  font-weight: 700;
+  margin: 10px 0 20px;
+  color: var(--ink);
+  transition: color 0.3s;
+}
+
+.timer-display.study {
+  color: var(--accent);
+}
+
+.timer-display.break {
+  color: var(--mint);
+}
+
+.timer-settings {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.timer-settings label {
+  font-size: 11px;
+  color: var(--ink-3);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.timer-settings select {
+  padding: 6px 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--white);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+
+.timer-controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.timer-controls button {
+  padding: 8px 16px;
+  border-radius: var(--r-pill);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+  border: none;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 2px 8px rgba(45, 134, 83, 0.2);
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--sage-light);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: var(--sage);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--error);
+  border: 1px solid var(--error-border) !important;
+}
+
+.btn-outline:hover {
+  background: var(--error-soft);
+}
+
+.btn-save-manual {
+  margin-top: 16px;
+  width: 100%;
+  padding: 8px;
+  background: var(--sage-pale);
+  color: var(--sage);
+  border: 1px solid var(--sage-light);
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-save-manual:hover {
+  background: var(--mint);
+  color: var(--forest);
+}
+
+.btn-save-manual:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Weekly Chart */
+.weekly-chart-container {
+  height: 220px;
+  background: var(--white);
+  border-radius: var(--r-md);
+  padding: 15px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.chart-loading {
+  text-align: center;
+  color: var(--ink-4);
+  font-size: 13px;
+  padding: 40px 0;
+}

@@ -1,6 +1,6 @@
 import { useAuth } from '../context/AuthContext';
 
-export default function Header() {
+export default function Header({ toggleSidebar }) {
     const { logout } = useAuth();
     return (
         <header className="header">
@@ -15,6 +15,7 @@ export default function Header() {
                 <div className="header-status">
                     <div className="status-dot" /> Active
                 </div>
+                <button className="header-btn" title="Study Tools" onClick={toggleSidebar}>📚</button>
                 <button className="header-btn" title="New chat">⊕</button>
                 <button className="header-btn" title="Upload PDF">⊞</button>
                 <button className="header-btn" title="Sign out" onClick={logout}>⎋</button>
@@ -22,3 +23,4 @@ export default function Header() {
         </header>
     );
 }
+

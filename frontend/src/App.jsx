@@ -4,8 +4,10 @@ import ChatArea from './components/ChatArea';
 import BottomBar from './components/BottomBar';
 import Particles from './components/Particles';
 import AuthPage from './components/AuthPage';
+import Sidebar from './components/Sidebar';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import './index.css';
+import './sidebar.css';
 
 const WELCOME_MESSAGE = {
   id: 'welcome', role: 'bot', time: new Date(),
@@ -17,6 +19,7 @@ function MainApp() {
   const [messages, setMessages] = useState([WELCOME_MESSAGE]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const chatEndRef = useRef(null);
 
   useEffect(() => {
@@ -61,11 +64,14 @@ function MainApp() {
         <div className="bg-blob bg-blob-2" />
         <div className="bg-blob bg-blob-3" />
       </div>
-      <div className="app">
-        <Header />
-        <Particles />
-        <ChatArea messages={messages} loading={loading} chatEndRef={chatEndRef} />
-        <BottomBar input={input} setInput={setInput} onSend={() => sendMessage()} onQuickQuestion={sendMessage} disabled={loading} />
+      <div className="app-container">
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <div className="app" style={{ flex: 1 }}>
+          <Header toggleSidebar={() => setSidebarOpen(prev => !prev)} />
+          <Particles />
+          <ChatArea messages={messages} loading={loading} chatEndRef={chatEndRef} />
+          <BottomBar input={input} setInput={setInput} onSend={() => sendMessage()} onQuickQuestion={sendMessage} disabled={loading} />
+        </div>
       </div>
     </>
   );
