@@ -153,14 +153,30 @@ export default function StudyTimer({ onSessionSaved }) {
   const stopTimer = () => {
     setIsActive(false);
     if (mode === 'study') {
+      // Stopping study → save & go idle
       const done = studyMins - Math.ceil(timeLeft / 60);
       if (done > 0) doSave(done);
+      setMode('idle');
+      setTimeLeft(0);
+      startTimeRef.current = null;
+      warnedRef.current = { five: false, two: false, one: false };
+      exitFS();
+    } else if (mode === 'break') {
+      // Stopping break early → auto-restart study countdown
+      warnedRef.current = { five: false, two: false, one: false };
+      startTimeRef.current = new Date().toISOString();
+      setSaved(false);
+      setMode('study');
+      setTimeLeft(studyMins * 60);
+      setIsActive(true);
+      enterFS();
+    } else {
+      // break-done or any other → go idle
+      setMode('idle');
+      setTimeLeft(0);
+      startTimeRef.current = null;
+      exitFS();
     }
-    setMode('idle');
-    setTimeLeft(0);
-    startTimeRef.current = null;
-    warnedRef.current = { five: false, two: false, one: false };
-    exitFS();
   };
 
   const manualSave = () => {
