@@ -26,24 +26,11 @@ def answer_question(question: str) -> Dict[str, Any]:
     is_sin = is_sinhala(question)
 
     if is_sin:
-        llm = create_chat_model(temperature=0.0)
-
-        # Translate ONLY for the vector search query — preserve biological meaning
-        translate_prompt = (
-            "You are a Sri Lankan A/L Biology expert fluent in both Sinhala and English.\n"
-            "Translate the following Sinhala biology question into clear, natural English.\n"
-            "Preserve all biological terminology accurately. Only output the English translation, nothing else.\n\n"
-            f"Sinhala question:\n{question}"
-        )
-        english_query = str(llm.invoke([HumanMessage(content=translate_prompt)]).content).strip()
-
-        # Run RAG: retrieval uses English query, but answer is generated natively in Sinhala
+        # Run RAG: retrieval and answer generation natively in Sinhala
         result = run_qa_flow(
-            question=english_query,          # used for vector DB search only
-            original_question=question,       # original Sinhala — used for answer generation
-            response_language="sinhala",      # agents will write the answer in Sinhala natively
+            question=question,
+            response_language="sinhala",
         )
-        result["english_question"] = english_query
 
     else:
         # English: plain flow, no translation needed

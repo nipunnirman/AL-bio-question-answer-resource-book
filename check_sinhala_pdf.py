@@ -17,10 +17,4 @@ def check_pdf(file_path):
         print(f"Failed to load: {e}")
 
 if __name__ == "__main__":
-    files = [
-        "data/uploads/Unit 01-Introduction to Biology.pdf",
-        "data/uploads/Unit 02-Chemical and cellular basis of life.pdf",
-        "data/uploads/Unit 03-Evolution and diversity of organisms.pdf"
-    ]
-    for f in files:
-        check_pdf(f)
+    check_pdf("data/uploads/sinhala1.pdf")
