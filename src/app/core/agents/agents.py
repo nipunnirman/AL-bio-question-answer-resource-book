@@ -120,9 +120,9 @@ def summarization_node(state: QAState) -> QAState:
     response_language = state.get("response_language", "english")
 
     language_instruction = (
-        "IMPORTANT: Write your entire answer in Sinhala (සිංහල). "
-        "CRITICAL: You MUST use the EXACT Sinhala technical terms, glossary words, and vocabulary exactly as they appear in the CONTEXT. "
-        "Do not paraphrase or use synonyms for biological terms (e.g., if the context says 'සංසක්ති', do not change it to 'සංයුජ'). "
+        "CRITICAL INSTRUCTION FOR SINHALA: You are FORBIDDEN from generating or translating your own Sinhala sentences. "
+        "You MUST copy and paste the EXACT sentences from the CONTEXT. "
+        "DO NOT write 'පහත පරිදි වේ:' or any introductory text. JUST COPY AND PASTE the relevant text from the CONTEXT character-for-character. "
         "Keep all markdown formatting (bold, tables, lists) intact.\n\n"
         if response_language == "sinhala" else ""
     )
@@ -169,8 +169,8 @@ def verification_node(state: QAState) -> QAState:
     response_language = state.get("response_language", "english")
 
     language_instruction = (
-        "IMPORTANT: Your final verified answer must be written entirely in Sinhala (සිංහල). "
-        "CRITICAL: Verify that the exact Sinhala biological technical terms from the CONTEXT are used. Do not allow paraphrased synonymous terms. "
+        "CRITICAL INSTRUCTION FOR SINHALA: Ensure the answer is copied EXACTLY from the CONTEXT without any translation, summarization, or hallucination. "
+        "If the draft contains ANY words that are not character-for-character in the CONTEXT, REPLACE THEM with the exact text from the CONTEXT. "
         "Do not switch to English. Keep markdown formatting intact.\n\n"
         if response_language == "sinhala" else ""
     )
