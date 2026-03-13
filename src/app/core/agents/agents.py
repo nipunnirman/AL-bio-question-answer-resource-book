@@ -121,8 +121,9 @@ def summarization_node(state: QAState) -> QAState:
 
     language_instruction = (
         "IMPORTANT: Write your entire answer in Sinhala (සිංහල). "
-        "Explain naturally and in a student-friendly way, like a helpful teacher would. "
-        "Keep all markdown formatting (bold, tables, lists) intact but in Sinhala.\n\n"
+        "CRITICAL: You MUST use the EXACT Sinhala technical terms, glossary words, and vocabulary exactly as they appear in the CONTEXT. "
+        "Do not paraphrase or use synonyms for biological terms (e.g., if the context says 'සංසක්ති', do not change it to 'සංයුජ'). "
+        "Keep all markdown formatting (bold, tables, lists) intact.\n\n"
         if response_language == "sinhala" else ""
     )
 
@@ -169,6 +170,7 @@ def verification_node(state: QAState) -> QAState:
 
     language_instruction = (
         "IMPORTANT: Your final verified answer must be written entirely in Sinhala (සිංහල). "
+        "CRITICAL: Verify that the exact Sinhala biological technical terms from the CONTEXT are used. Do not allow paraphrased synonymous terms. "
         "Do not switch to English. Keep markdown formatting intact.\n\n"
         if response_language == "sinhala" else ""
     )
