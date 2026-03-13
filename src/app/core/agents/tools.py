@@ -10,6 +10,11 @@ from langchain_core.tools import tool
 
 from ..retrieval.vector_store import retrieve
 from ..retrieval.serialization import serialize_chunks_with_ids
+import re
+
+def is_sinhala(text: str) -> bool:
+    """Check if text contains Sinhala unicode characters."""
+    return bool(re.search(r'[\u0D80-\u0DFF]', text))
 
 
 @tool(response_format="content_and_artifact")
@@ -50,7 +55,12 @@ def retrieval_tool(query: str):
         return "No query provided.", {"docs": [], "citations": {}}
 
     # Retrieve documents from vector store
-    docs = retrieve(query, k=4)
+    filter_dict = None
+    if is_sinhala(query):
+        # Restrict Pinecone search exclusively to the Sinhala OCR file
+        filter_dict = {"source": "data/uploads/sinhala1_ocr.txt"}
+
+    docs = retrieve(query, k=4, filter_dict=filter_dict)
 
     # Handle empty retrieval
     if not docs:

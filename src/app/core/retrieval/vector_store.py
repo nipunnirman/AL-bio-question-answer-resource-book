@@ -36,34 +36,27 @@ def _get_vector_store() -> PineconeVectorStore:
         embedding=embeddings,
     )
 
-def get_retriever(k: int | None = None):
-    """Get a Pinecone retriever instance.
+def retrieve(query: str, k: int | None = None, filter_dict: dict | None = None) -> List[Document]:
+    """Retrieve documents from Pinecone for a given query.
 
     Args:
+        query: Search query string.
         k: Number of documents to retrieve (defaults to config value).
+        filter_dict: Optional Pinecone metadata filter.
 
     Returns:
-        PineconeVectorStore instance configured as a retriever.
+        List of Document objects with metadata (including page numbers).
     """
     settings = get_settings()
     if k is None:
         k = settings.retrieval_k
 
     vector_store = _get_vector_store()
-    return vector_store.as_retriever(search_kwargs={"k": k})
+    search_kwargs = {"k": k}
+    if filter_dict:
+        search_kwargs["filter"] = filter_dict
 
-
-def retrieve(query: str, k: int | None = None) -> List[Document]:
-    """Retrieve documents from Pinecone for a given query.
-
-    Args:
-        query: Search query string.
-        k: Number of documents to retrieve (defaults to config value).
-
-    Returns:
-        List of Document objects with metadata (including page numbers).
-    """
-    retriever = get_retriever(k=k)
+    retriever = vector_store.as_retriever(search_kwargs=search_kwargs)
     return retriever.invoke(query)
 
 def index_documents(file_path: Path) -> int:
